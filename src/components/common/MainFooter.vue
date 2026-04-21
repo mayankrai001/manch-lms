@@ -4,10 +4,13 @@
       <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
         
         <!-- About -->
-        <div class="col-span-1 md:col-span-1">
-          <div class="flex items-center gap-2 mb-4">
-            <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white font-bold">M</div>
-            <span class="font-bold text-xl">Manch Classes</span>
+         <div class="col-span-1 md:col-span-1">
+          <div class="mb-5">
+            <img
+              src="/logo.svg"
+              alt="Manch Science Classes"
+              class="h-20 w-auto"
+            />
           </div>
           <p class="text-gray-400 text-sm mb-4">
             Nurturing Creative Innovators of Tomorrow. Welcome to Manch, where interactive learning meets well-rounded growth.

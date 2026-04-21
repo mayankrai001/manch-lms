@@ -1,0 +1,26 @@
+<svg viewBox="50 415 810 335" xmlns="http://www.w3.org/2000/svg">
+  <!-- Blue rounded square with M -->
+  <g id="m-box">
+    <rect x="50" y="415" width="265" height="265" rx="8" fill="#4A90E2"/>
+    
+    <!-- M letterform -->
+    <path d="M 85 460 L 85 635 L 125 635 L 125 530 L 182.5 620 L 240 530 L 240 635 L 280 635 L 280 460 L 230 460 L 182.5 555 L 135 460 Z" fill="#000000"/>
+    
+    <!-- Pencil arrow detail -->
+    <polygon points="85,635 85,665 105,650" fill="#000000"/>
+  </g>
+  
+  <!-- "anch" text in blue -->
+  <g id="anch-text">
+    <text x="325" y="650" font-family="Arial, sans-serif" font-size="220" font-weight="700" fill="#4A90E2" letter-spacing="-5">anch</text>
+  </g>
+  
+  <!-- Underline bar -->
+  <rect x="85" y="685" width="730" height="12" fill="#4A90E2"/>
+  
+  <!-- Small gray square at end of underline -->
+  <rect x="820" y="685" width="40" height="40" fill="#666666"/>
+  
+  <!-- "SCIENCE CLASSES" text in gray -->
+  <text x="335" y="745" font-family="Arial, sans-serif" font-size="48" font-weight="400" fill="#666666" letter-spacing="12">SCIENCE CLASSES</text>
+</svg>

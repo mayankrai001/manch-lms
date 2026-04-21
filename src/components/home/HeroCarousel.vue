@@ -1,8 +1,13 @@
 <template>
-  <div class="relative bg-blue-900 h-[500px] overflow-hidden">
+  <div class="relative bg-blue-900 h-[500px] overflow-hidden" @mouseenter="stopAutoPlay" @mouseleave="startAutoPlay">
     <!-- Carousel Track -->
-    <div class="whitespace-nowrap transition-transform duration-700 ease-in-out h-full" :style="{ transform: `translateX(-${currentSlide * 100}%)` }">
-      <div v-for="(slide, index) in slides" :key="index" class="inline-block w-full h-full relative">
+    <div 
+      class="whitespace-nowrap h-full" 
+      :class="{ 'transition-transform duration-700 ease-in-out': !isSnapping }"
+      :style="{ transform: `translateX(-${currentSlide * 100}%)` }"
+      @transitionend="handleTransitionEnd"
+    >
+      <div v-for="(slide, index) in displaySlides" :key="index" class="inline-block w-full h-full relative">
         <!-- Placeholder for background image -->
         <div class="absolute inset-0 bg-gradient-to-r from-blue-900 to-blue-800 opacity-90"></div>
         
@@ -28,18 +33,18 @@
     </div>
 
     <!-- Carousel Controls -->
-    <button @click="prev" class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 rounded-full p-2 text-white">
+    <button @click="prev" class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 rounded-full p-2 text-white z-10">
       <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
     </button>
-    <button @click="next" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 rounded-full p-2 text-white">
+    <button @click="next" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 rounded-full p-2 text-white z-10">
       <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
     </button>
 
     <!-- Navigation Dots -->
-    <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2">
+    <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
       <button v-for="(slide, index) in slides" :key="'dot'+index" 
-        @click="currentSlide = index"
-        :class="['w-3 h-3 rounded-full transition-colors', currentSlide === index ? 'bg-secondary' : 'bg-white/50']">
+        @click="goToSlide(index)"
+        :class="['w-3 h-3 rounded-full transition-colors', activeDot === index ? 'bg-secondary' : 'bg-white/50']">
       </button>
     </div>
   </div>
@@ -50,7 +55,8 @@ export default {
   name: 'HeroCarousel',
   data() {
     return {
-      currentSlide: 0,
+      currentSlide: 1, // Start at the first real slide (index 1 in displaySlides)
+      isSnapping: false,
       interval: null,
       slides: [
         { tagline: 'Nurturing Creative Innovators of Tomorrow', subtext: 'Welcome to Manch, where interactive learning meets well-rounded growth' },
@@ -60,18 +66,65 @@ export default {
       ]
     }
   },
+  computed: {
+    displaySlides() {
+      if (this.slides.length === 0) return [];
+      // [Last Slide Clone, Slide 1, Slide 2, Slide 3, Slide 4, First Slide Clone]
+      return [
+        this.slides[this.slides.length - 1],
+        ...this.slides,
+        this.slides[0]
+      ];
+    },
+    activeDot() {
+      // Map currentSlide (1 to length) to dot index (0 to length-1)
+      if (this.currentSlide === 0) return this.slides.length - 1;
+      if (this.currentSlide > this.slides.length) return 0;
+      return this.currentSlide - 1;
+    }
+  },
   methods: {
     next() {
-      this.currentSlide = (this.currentSlide + 1) % this.slides.length;
+      if (this.isSnapping) return;
+      this.currentSlide++;
     },
     prev() {
-      this.currentSlide = (this.currentSlide - 1 + this.slides.length) % this.slides.length;
+      if (this.isSnapping) return;
+      this.currentSlide--;
+    },
+    goToSlide(index) {
+      if (this.isSnapping) return;
+      this.currentSlide = index + 1;
+    },
+    handleTransitionEnd() {
+      // If we reached the end clone (First Slide Clone)
+      if (this.currentSlide >= this.displaySlides.length - 1) {
+        this.isSnapping = true;
+        this.currentSlide = 1;
+        // Wait for next tick to re-enable transitions
+        this.$nextTick(() => {
+          // forcing reflow might be needed in some browsers, but Vue's reactive update usually handles it
+          setTimeout(() => { this.isSnapping = false; }, 50);
+        });
+      }
+      // If we reached the beginning clone (Last Slide Clone)
+      else if (this.currentSlide <= 0) {
+        this.isSnapping = true;
+        this.currentSlide = this.slides.length;
+        this.$nextTick(() => {
+          setTimeout(() => { this.isSnapping = false; }, 50);
+        });
+      }
     },
     startAutoPlay() {
+      this.stopAutoPlay();
       this.interval = setInterval(this.next, 5000);
     },
     stopAutoPlay() {
-      clearInterval(this.interval);
+      if (this.interval) {
+        clearInterval(this.interval);
+        this.interval = null;
+      }
     }
   },
   mounted() {
