@@ -5,7 +5,7 @@
         <div class="flex items-center">
           <router-link to="/" class="flex-shrink-0 flex items-center py-1">
             <img
-              src="/logo.svg"
+              src="@/assets/logo.svg"
               alt="Manch Science Classes"
               class="h-16 w-auto"
             />
@@ -102,6 +102,7 @@ export default {
         { name: "Study Material", path: "/study-material" },
         { name: "Gallery", path: "/gallery" },
         { name: "Results", path: "/results" },
+        { name: "Lectures", path: "/lectures" },
       ],
     };
   },
