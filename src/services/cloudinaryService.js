@@ -11,9 +11,9 @@
 // 4. Replace CLOUD_NAME and UPLOAD_PRESET below
 // ============================================================
 
-// 🔥 REPLACE these two values with yours
-const CLOUD_NAME = "dnq9zeet5"; // e.g., 'dxyz1abc2'
-const UPLOAD_PRESET = "manch-lms"; // e.g., 'manch_unsigned'
+// 🔥 Using environment variables from .env
+const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
 // Cloudinary upload endpoint (auto detects image/pdf/video)
 const UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`;
