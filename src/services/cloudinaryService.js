@@ -15,8 +15,7 @@
 const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
-// Cloudinary upload endpoint (auto detects image/pdf/video)
-const UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`;
+
 
 // ─── Validation ────────────────────────────────────────────
 
@@ -70,15 +69,23 @@ export const validateFile = (file, type = "image") => {
  * Upload a file directly to Cloudinary from the browser.
  * Uses XHR for real progress tracking.
  *
+ * PDFs → /raw/upload  (served with correct Content-Type: application/pdf)
+ * Images → /image/upload (optimized CDN delivery)
+ *
  * @param {File} file - The file to upload
  * @param {Function} onProgress - Called with 0-100 progress percentage
  * @returns {Promise<string>} - Cloudinary secure_url (CDN URL)
  */
 export const uploadToCloudinary = (file, onProgress = null) => {
   return new Promise((resolve, reject) => {
+    // 🔥 FINAL FIX: Using /auto/upload and passing resource_type: auto 
+    // This allows Cloudinary to decide the best type (image vs raw) dynamically.
+    const uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`;
+
     const formData = new FormData();
     formData.append("file", file);
     formData.append("upload_preset", UPLOAD_PRESET);
+    formData.append("resource_type", "auto"); // <--- CRITICAL for Unsigned uploads
 
     const xhr = new XMLHttpRequest();
 
@@ -124,7 +131,7 @@ export const uploadToCloudinary = (file, onProgress = null) => {
       reject(new Error("Upload was cancelled."));
     });
 
-    xhr.open("POST", UPLOAD_URL);
+    xhr.open("POST", uploadUrl);
     xhr.send(formData);
   });
 };

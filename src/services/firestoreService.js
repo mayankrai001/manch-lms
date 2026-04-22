@@ -72,10 +72,11 @@ export const updateGalleryImage = async (docId, { title, event }) => {
  * @param {{ title, subject, fileUrl, type }} data
  * @returns {Promise<DocumentReference>}
  */
-export const addMaterial = async ({ title, subject, fileUrl, type }) => {
+export const addMaterial = async ({ title, standard, subject, fileUrl, type }) => {
   return await addDoc(collection(db, "materials"), {
     title,
-    subject,
+    standard: standard || "Other",
+    subject: subject || "General",
     fileUrl,
     type, // 'pdf' | 'image'
     uploadedAt: serverTimestamp(),

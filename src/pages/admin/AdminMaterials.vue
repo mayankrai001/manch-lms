@@ -21,17 +21,31 @@
               />
             </div>
 
+            <!-- Standard -->
+            <div>
+              <label for="material-standard" class="block text-sm font-medium text-gray-700 mb-1.5">Standard / Grade <span class="text-red-500">*</span></label>
+              <select
+                id="material-standard"
+                v-model="form.standard"
+                required
+                class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              >
+                <option value="" disabled>Select standard</option>
+                <option v-for="std in standards" :key="std" :value="std">{{ std }}</option>
+              </select>
+            </div>
+
             <!-- Subject -->
             <div>
-              <label for="material-subject" class="block text-sm font-medium text-gray-700 mb-1.5">Subject / Course <span class="text-red-500">*</span></label>
+              <label for="material-subject" class="block text-sm font-medium text-gray-700 mb-1.5">Subject <span class="text-red-500">*</span></label>
               <select
                 id="material-subject"
                 v-model="form.subject"
                 required
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
               >
-                <option value="" disabled>Select subject or course</option>
-                <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+                <option value="" disabled>Select subject</option>
+                <option v-for="sub in subjects" :key="sub" :value="sub">{{ sub }}</option>
               </select>
             </div>
 
@@ -79,7 +93,7 @@
             <button
               id="material-upload-btn"
               type="submit"
-              :disabled="uploading || !form.file || !form.title || !form.subject"
+              :disabled="uploading || !form.file || !form.title || !form.standard || !form.subject"
               class="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all text-sm flex items-center justify-center gap-2"
             >
               <svg v-if="uploading" class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -127,13 +141,18 @@
               <!-- Info -->
               <div class="flex-1 min-w-0">
                 <p class="text-sm font-medium text-gray-800 truncate">{{ mat.title }}</p>
-                <p class="text-xs text-gray-500">{{ mat.subject }}</p>
+                <p class="text-xs text-gray-500">{{ mat.standard }} • {{ mat.subject }}</p>
               </div>
               <!-- Actions -->
               <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <a :href="mat.fileUrl" target="_blank" class="p-1.5 text-gray-400 hover:text-blue-600 transition" title="Preview">
+                <a :href="getPreviewUrl(mat)" target="_blank" rel="noopener noreferrer" class="p-1.5 text-gray-400 hover:text-blue-600 transition" title="Preview">
                   <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </a>
+                <a :href="getDownloadUrl(mat)" :download="mat.title" class="p-1.5 text-gray-400 hover:text-green-600 transition" title="Download">
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
                 </a>
                 <button @click="confirmDelete(mat)" class="p-1.5 text-gray-400 hover:text-red-500 transition" title="Delete">
@@ -179,7 +198,7 @@ export default {
   components: { AdminLayout },
   data() {
     return {
-      form: { title: '', subject: '', file: null },
+      form: { title: '', standard: '', subject: '', file: null },
       fileError: null,
       uploading: false,
       uploadProgress: 0,
@@ -187,7 +206,8 @@ export default {
       materials: [],
       deleteTarget: null,
       deleting: false,
-      categories: ['8th-9th Foundation', '10th Board', '11th-12th Science', 'NEET Prep', 'JEE Prep', 'MHT-CET']
+      standards: ['8th', '9th', '10th', '11th', '12th', 'Foundation', 'NEET', 'JEE', 'MHT-CET', 'Other'],
+      subjects: ['Physics', 'Chemistry', 'Mathematics', 'Biology', 'Science', 'English', 'Marathi', 'Social Studies', 'History/Civics', 'Geography', 'General']
     }
   },
   async created() {
@@ -233,12 +253,13 @@ export default {
         )
         await addMaterial({
           title: this.form.title.trim(),
+          standard: this.form.standard,
           subject: this.form.subject,
           fileUrl,
           type: isPdf ? 'pdf' : 'image'
         })
         showSuccess('Material uploaded!', 'Now visible on the Study Material page.')
-        this.form = { title: '', subject: '', file: null }
+        this.form = { title: '', standard: '', subject: '', file: null }
         this.uploadProgress = 0
         this.$refs.matFileInput.value = ''
         await this.fetchMaterials()
@@ -247,6 +268,22 @@ export default {
       } finally {
         this.uploading = false
       }
+    },
+
+    getPreviewUrl(mat) {
+      if (!mat.fileUrl) return '#'
+      // For PDFs, we can use Google Docs Viewer as a proxy if direct link fails
+      // Or just ensure it's a clean secure URL
+      return mat.fileUrl
+    },
+
+    getDownloadUrl(mat) {
+      if (!mat.fileUrl) return '#'
+      // Force download by adding fl_attachment to Cloudinary URL
+      if (mat.fileUrl.includes('cloudinary.com')) {
+        return mat.fileUrl.replace('/upload/', '/upload/fl_attachment/')
+      }
+      return mat.fileUrl
     },
 
     confirmDelete(mat) { this.deleteTarget = mat },

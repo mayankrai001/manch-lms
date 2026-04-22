@@ -81,6 +81,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/admin/faculty',
+    name: 'AdminFaculty',
+    component: () => import('../pages/admin/AdminFaculty.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/admin/lectures',
     name: 'AdminLectures',
     component: () => import('../pages/admin/AdminLectures.vue'),
